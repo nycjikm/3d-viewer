@@ -23,6 +23,7 @@ SALT = b"3d-viewer-v1-salt"  # 17 bytes, padded to 32 internally by PBKDF2
 
 MODELS_DIR = Path(__file__).parent / "models"
 
+# List of file patterns to encrypt (supports both flat and subdirectories)
 FILES = [
     "scene_textured_filtered_mild.obj",
     "scene_textured_filtered_mild.mtl",
@@ -62,6 +63,7 @@ def main():
     verify_path.write_bytes(encrypt(b"VALID", key))
     print(f"Written: verify.enc")
 
+    # Encrypt files: first in root models/, then in any subdirectories
     for filename in FILES:
         src = MODELS_DIR / filename
         dst = MODELS_DIR / (filename + ".enc")
@@ -73,6 +75,20 @@ def main():
         dst.write_bytes(enc)
         src.unlink()
         print(f"Encrypted: {filename}  {len(data)/1048576:.1f} MB → {len(enc)/1048576:.1f} MB")
+
+    # Recursively encrypt files in subdirectories
+    for subdir in MODELS_DIR.iterdir():
+        if not subdir.is_dir():
+            continue
+        for src in subdir.glob("*"):
+            if src.is_file() and not src.name.endswith(".enc"):
+                data = src.read_bytes()
+                enc = encrypt(data, key)
+                dst = src.parent / (src.name + ".enc")
+                dst.write_bytes(enc)
+                src.unlink()
+                rel_path = src.relative_to(MODELS_DIR.parent)
+                print(f"Encrypted: {rel_path}  {len(data)/1048576:.1f} MB → {len(enc)/1048576:.1f} MB")
 
     print("\nDone. Plain files removed. Only .enc files remain.")
 
