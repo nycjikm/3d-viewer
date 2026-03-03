@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Reconstruction Viewer</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ⓪ Password gate -->
+  <div id="password-screen">
+    <div id="password-box">
+      <div id="password-icon">🔒</div>
+      <h2>3D Reconstruction Viewer</h2>
+      <p>Enter the access password to continue</p>
+      <input id="password-input" type="password" placeholder="Password" autocomplete="off">
+      <button id="password-btn">Enter</button>
+      <div id="password-error" hidden>Incorrect password. Try again.</div>
+    </div>
+  </div>
+
+  <!-- ① Gallery -->
+  <div id="gallery" hidden>
+    <div id="gallery-header">
+      <h1>3D Reconstruction Viewer</h1>
+      <p>Select a scan to explore interactively</p>
+    </div>
+    <div id="model-grid"></div>
+  </div>
+
+  <!-- ② Loading -->
+  <div id="loading-screen" hidden>
+    <button class="back-btn" id="cancel-btn">&#8592; Back</button>
+    <div id="loading-inner">
+      <div id="spinner"></div>
+      <div id="loading-label">Loading…</div>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+      <div id="progress-text">0 MB / — MB</div>
+    </div>
+  </div>
+
+  <!-- ③ Viewer -->
+  <div id="viewer" hidden>
+    <canvas id="canvas"></canvas>
+
+    <!-- Top HUD -->
+    <div id="hud">
+      <button class="back-btn" id="back-btn">&#8592; Models</button>
+      <span id="model-title"></span>
+      <div id="hud-right">
+        <button id="resetBtn">&#8635; Reset</button>
+      </div>
+    </div>
+
+    <!-- Layer panel -->
+    <div id="layer-panel">
+      <div id="layer-panel-header">
+        <span>&#9776; Layers</span>
+        <button id="layer-toggle-btn" title="Collapse">&#8722;</button>
+      </div>
+      <div id="layer-list"></div>
+    </div>
+
+    <div id="hint">Drag to orbit &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Right-drag to pan</div>
+  </div>
+
+  <!-- ④ Error -->
+  <div id="error-screen" hidden>
+    <button class="back-btn" id="err-back-btn">&#8592; Back</button>
+    <div id="error-inner">
+      <div id="error-icon">&#9888;</div>
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
