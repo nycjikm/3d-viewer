@@ -6,76 +6,55 @@ import { PLYLoader } from "three/addons/loaders/PLYLoader.js";
 // ── Model catalog ─────────────────────────────────────────────────────────────
 const MODELS = [
   {
-    name: "Optilium – Double Aruco",
-    description: "Coral reef section with ArUco scale markers",
-    icon: "🪸",
+    name: "Double Tree",
+    description: "Filtered textured 3D tree reconstruction",
+    icon: "🌳",
     layers: [
-      {
-        name: "Textured Mesh (filtered)",
-        type: "obj",
-        obj: "models/scene_textured_filtered_mild.obj",
-        mtl: "models/scene_textured_filtered_mild.mtl",
-        tex: "models/scene_textured_filtered_mild_0.png",
-        size: "74 MB", color: "#4e9fff", visible: true,
-      },
-      {
-        name: "Textured Mesh (raw)",
-        type: "obj",
-        obj: "models/scene_textured.obj",
-        mtl: "models/scene_textured.mtl",
-        tex: "models/scene_textured_material_00_map_Kd.jpg",
-        size: "29 MB", color: "#a78bfa", visible: false,
-      },
-      {
-        name: "Dense Point Cloud",
-        type: "ply",
-        file: "models/scene_dense.ply",
-        size: "44 MB", color: "#34d399", visible: false,
-      },
-      {
-        name: "Point Cloud (mild filter)",
-        type: "ply",
-        file: "models/scene_dense_filtered_mild.ply",
-        size: "42 MB", color: "#fbbf24", visible: false,
-      },
-      {
-        name: "Point Cloud (strong filter)",
-        type: "ply",
-        file: "models/scene_dense_filtered_strong.ply",
-        size: "38 MB", color: "#f87171", visible: false,
-      },
       {
         name: "Mesh Structure",
         type: "ply",
-        file: "models/scene_mesh_filtered_openmvs.ply",
-        size: "4.6 MB", color: "#e2e8f0", visible: false, isMesh: true,
+        file: "models/double_tree/scene_mesh.ply",
+        size: "4.6 MB", color: "#8b5cf6", visible: true, isMesh: true,
+      },
+      {
+        name: "Mesh Filtered",
+        type: "ply",
+        file: "models/double_tree/scene_mesh_filtered_openmvs.ply",
+        size: "4.6 MB", color: "#60a5fa", visible: false, isMesh: true,
       },
     ],
   },
   {
-    name: "Optilium Tree – Single Section",
-    description: "Tree reconstruction from single camera angle",
-    icon: "🌳",
+    name: "Single Tree",
+    description: "Single tree geometry from single camera angle",
+    icon: "🌲",
     layers: [
       {
         name: "Textured Mesh",
         type: "obj",
-        obj: "models/optilium_tree_singlesection/scene_textured.obj",
-        mtl: "models/optilium_tree_singlesection/scene_textured.mtl",
-        tex: "models/optilium_tree_singlesection/scene_textured_material_00_map_Kd.jpg",
-        size: "12 MB", color: "#8b5cf6", visible: true,
-      },
-      {
-        name: "Dense Point Cloud",
-        type: "ply",
-        file: "models/optilium_tree_singlesection/scene_dense.ply",
-        size: "10 MB", color: "#f59e0b", visible: false,
+        obj: "models/single_tree/scene_textured.obj",
+        mtl: "models/single_tree/scene_textured.mtl",
+        tex: "models/single_tree/scene_textured_material_00_map_Kd.jpg",
+        size: "11 MB", color: "#10b981", visible: true,
       },
       {
         name: "Mesh Structure",
         type: "ply",
-        file: "models/optilium_tree_singlesection/scene_mesh.ply",
-        size: "1.8 MB", color: "#60a5fa", visible: false, isMesh: true,
+        file: "models/single_tree/scene_mesh.ply",
+        size: "1.8 MB", color: "#059669", visible: false, isMesh: true,
+      },
+    ],
+  },
+  {
+    name: "Transect 1 – Abo Shosha",
+    description: "Coral reef transect survey - Abo Shosha location",
+    icon: "🪸",
+    layers: [
+      {
+        name: "Mesh Structure",
+        type: "ply",
+        file: "models/transect 1 Abo Shosha/scene_mesh.ply",
+        size: "32 MB", color: "#f59e0b", visible: true, isMesh: true,
       },
     ],
   },
@@ -275,8 +254,16 @@ function fitCamera() {
   controls.update();
 }
 
-// ── Encrypted fetch with progress ────────────────────────────────────────────
+// ── Cache & Performance Optimizations ────────────────────────────────────────
+const FILE_CACHE = new Map(); // In-memory cache for loaded files
+
+// ── Encrypted fetch with progress & caching ──────────────────────────────────
 async function fetchEnc(url, onProgress) {
+  // Check cache first
+  if (FILE_CACHE.has(url)) {
+    return FILE_CACHE.get(url);
+  }
+
   const resp = await fetch(url + ".enc");
   if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${url}`);
   const total = parseInt(resp.headers.get("content-length") || "0", 10);
@@ -291,7 +278,11 @@ async function fetchEnc(url, onProgress) {
     if (onProgress) onProgress(loaded, total);
   }
   const blob = new Blob(chunks);
-  return decryptBuffer(await blob.arrayBuffer());
+  const decrypted = await decryptBuffer(await blob.arrayBuffer());
+
+  // Cache the result
+  FILE_CACHE.set(url, decrypted);
+  return decrypted;
 }
 
 function progressCb(loaded, total) {
@@ -302,32 +293,45 @@ function progressCb(loaded, total) {
     (total > 0 ? ` / ${(total / 1048576).toFixed(1)} MB` : "");
 }
 
-// ── Layer loading ─────────────────────────────────────────────────────────────
+// ── Layer loading (optimized) ─────────────────────────────────────────────────
 async function loadLayer(layer, onProgress) {
   if (layer.type === "obj") {
-    // 1. Fetch + decrypt OBJ, parse geometry
-    const objBuf = await fetchEnc(layer.obj, onProgress);
+    // 1. Fetch + decrypt OBJ in parallel with texture
+    const objPromise = fetchEnc(layer.obj, (loaded, total) => {
+      if (onProgress) onProgress(loaded, total * 0.7); // Weight OBJ as 70% of progress
+    });
+    const texPromise = fetchEnc(layer.tex).catch(() => null);
+
+    const objBuf = await objPromise;
     const objUrl = URL.createObjectURL(new Blob([objBuf], { type: "text/plain" }));
+
+    // Parse OBJ (this is fast, just parsing text)
     const object = await new OBJLoader().loadAsync(objUrl);
     URL.revokeObjectURL(objUrl);
 
-    // 2. Fetch + decrypt texture, wait for full image decode, then revoke
-    const texBuf = await fetchEnc(layer.tex);
-    const ext    = layer.tex.split(".").pop();
-    const mime   = ext === "png" ? "image/png" : "image/jpeg";
-    const texUrl = URL.createObjectURL(new Blob([texBuf], { type: mime }));
-    const texture = await new Promise((resolve, reject) =>
-      new THREE.TextureLoader().load(texUrl, resolve, undefined, reject)
-    );
-    URL.revokeObjectURL(texUrl); // safe — image is fully decoded in GPU memory
-    texture.colorSpace = THREE.SRGBColorSpace;
+    // 2. Load texture in parallel (non-blocking)
+    const texBuf = await texPromise;
+    if (texBuf && layer.tex) {
+      const ext    = layer.tex.split(".").pop();
+      const mime   = ext === "png" ? "image/png" : "image/jpeg";
+      const texUrl = URL.createObjectURL(new Blob([texBuf], { type: mime }));
+      const texture = await new Promise((resolve, reject) =>
+        new THREE.TextureLoader().load(texUrl, resolve, undefined, reject)
+      );
+      URL.revokeObjectURL(texUrl);
+      texture.colorSpace = THREE.SRGBColorSpace;
 
-    // 3. Apply texture to every mesh
-    object.traverse(child => {
-      if (child.isMesh) {
-        child.material = new THREE.MeshPhongMaterial({ map: texture });
-      }
-    });
+      // Apply texture to every mesh
+      object.traverse(child => {
+        if (child.isMesh) {
+          child.material = new THREE.MeshPhongMaterial({
+            map: texture,
+            shininess: 100,
+            envMapIntensity: 0.5,
+          });
+        }
+      });
+    }
 
     object.rotation.x = Math.PI;
     return object;
@@ -340,14 +344,38 @@ async function loadLayer(layer, onProgress) {
 
     const geometry = await new PLYLoader().loadAsync(plyUrl);
     URL.revokeObjectURL(plyUrl);
-    geometry.computeVertexNormals();
+
+    // Skip expensive normal computation for large point clouds
+    if (layer.isMesh && geometry.attributes.position.count < 1000000) {
+      geometry.computeVertexNormals();
+    }
 
     const color = new THREE.Color(layer.color);
     let object;
     if (layer.isMesh) {
-      object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color, side: THREE.DoubleSide }));
+      // Use wireframe for dense meshes to improve performance
+      const wireframe = geometry.attributes.position.count > 500000;
+      object = new THREE.Mesh(
+        geometry,
+        new THREE.MeshLambertMaterial({
+          color,
+          side: THREE.DoubleSide,
+          wireframe,
+          flatShading: wireframe, // Faster rendering
+        })
+      );
     } else {
-      object = new THREE.Points(geometry, new THREE.PointsMaterial({ color, size: 0.003, sizeAttenuation: true }));
+      // Optimize point cloud rendering
+      object = new THREE.Points(
+        geometry,
+        new THREE.PointsMaterial({
+          color,
+          size: 0.002,
+          sizeAttenuation: true,
+          transparent: true,
+          opacity: 0.8,
+        })
+      );
     }
     object.rotation.x = Math.PI;
     return object;
