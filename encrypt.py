@@ -16,7 +16,7 @@ except ImportError:
     print("Run: pip install cryptography")
     sys.exit(1)
 
-PASSWORD = "Robot452"
+PASSWORD = "robot452"
 # Fixed public salt — OK because password has high entropy.
 # Must match the salt in app.js.
 SALT = b"3d-viewer-v1-salt"  # 17 bytes, padded to 32 internally by PBKDF2
