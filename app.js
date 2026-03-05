@@ -30,6 +30,12 @@ const MODELS = [
         file: "models/double_tree/scene_mesh_filtered_openmvs.ply",
         size: "4.6 MB", color: "#60a5fa", visible: false, isMesh: true,
       },
+      {
+        name: "Point Cloud",
+        type: "ply",
+        file: "models/double_tree/scene_mesh.ply",
+        size: "4.6 MB", color: "#06b6d4", visible: false,
+      },
     ],
   },
   {
@@ -71,10 +77,10 @@ const MODELS = [
         size: "32 MB", color: "#f59e0b", visible: true, isMesh: true,
       },
       {
-        name: "Dense Surface",
+        name: "Point Cloud",
         type: "ply",
         file: "models/transcect 1 Abo Shosha/scene_dense.mvs",
-        size: "3.1 MB", color: "#f97316", visible: false, isMesh: true,
+        size: "3.1 MB", color: "#06b6d4", visible: false,
       },
     ],
   },
@@ -90,13 +96,19 @@ const MODELS = [
         size: "28 MB", color: "#ec4899", visible: true, isMesh: true,
       },
       {
+        name: "Point Cloud",
+        type: "ply",
+        file: "models/transcect 2 Abo Shosha/scene.ply",
+        size: "52 MB", color: "#14b8a6", visible: false,
+      },
+      {
         name: "Scene Surface",
         type: "ply",
         file: "models/transcect 2 Abo Shosha/scene.mvs",
         size: "3.7 MB", color: "#d946ef", visible: false, isMesh: true,
       },
       {
-        name: "Dense Surface Alt",
+        name: "Dense Surface",
         type: "ply",
         file: "models/transcect 2 Abo Shosha/scene_dense.mvs",
         size: "3.7 MB", color: "#a855f7", visible: false, isMesh: true,
