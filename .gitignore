@@ -1,0 +1,4 @@
+
+# Large model files
+models/**/scene_dense.ply
+models/**/scene_textured.obj
