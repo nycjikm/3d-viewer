@@ -1,0 +1,7 @@
+# Created by Open3D 
+# object name: scene_textured_filtered
+newmtl scene_textured_filtered_0
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+map_Kd scene_textured_filtered_0.png

@@ -113,64 +113,8 @@ const resetBtn     = document.getElementById("resetBtn");
 const layerListEl  = document.getElementById("layer-list");
 const layerToggle  = document.getElementById("layer-toggle-btn");
 
-// ── Crypto ────────────────────────────────────────────────────────────────────
-// Same salt as encrypt.py — public, that's fine given the strong password.
-const SALT = new TextEncoder().encode("3d-viewer-v1-salt");
-let cryptoKey = null; // set once password is verified
-
-async function deriveKey(password) {
-  const raw = await crypto.subtle.importKey(
-    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
-  );
-  // extractable:true so we can export key bytes for sessionStorage
-  // (avoids storing the password itself)
-  return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: SALT, hash: "SHA-256", iterations: 100_000 },
-    raw,
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["decrypt"]
-  );
-}
-
-async function decryptBuffer(encBuffer) {
-  try {
-    if (!cryptoKey) throw new Error("Crypto key not initialized");
-    const data = new Uint8Array(encBuffer);
-    const iv         = data.slice(0, 12);
-    const ciphertext = data.slice(12);
-    return await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, ciphertext);
-  } catch (err) {
-    console.error("Decryption error:", err);
-    throw new Error(`Failed to decrypt file: ${err.message}`);
-  }
-}
-
-// ── Auto-unlock (no password gate) ────────────────────────────────────────────
-let keyReady = false;
-
-// Derive encryption key from hardcoded password
-(async () => {
-  try {
-    const key = await deriveKey("robot452");
-    cryptoKey = key;
-    keyReady = true;
-    galleryEl.hidden = false;
-  } catch (err) {
-    console.error("Failed to initialize encryption:", err);
-    galleryEl.hidden = false;
-  }
-})();
-
-// Ensure key is ready before loading
-async function ensureKeyReady() {
-  let attempts = 0;
-  while (!keyReady && attempts < 50) {
-    await new Promise(r => setTimeout(r, 100));
-    attempts++;
-  }
-  if (!keyReady) throw new Error("Encryption key failed to initialize");
-}
+// ── Show gallery immediately (no encryption) ────────────────────────────────
+galleryEl.hidden = false;
 
 // ── Gallery cards ─────────────────────────────────────────────────────────────
 MODELS.forEach((m, i) => {
@@ -260,14 +204,14 @@ function fitCamera() {
 // ── Cache & Performance Optimizations ────────────────────────────────────────
 const FILE_CACHE = new Map(); // In-memory cache for loaded files
 
-// ── Encrypted fetch with progress & caching ──────────────────────────────────
-async function fetchEnc(url, onProgress) {
+// ── File fetch with progress & caching (no encryption) ──────────────────────
+async function fetchFile(url, onProgress) {
   // Check cache first
   if (FILE_CACHE.has(url)) {
     return FILE_CACHE.get(url);
   }
 
-  const resp = await fetch(url + ".enc");
+  const resp = await fetch(url);
   if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${url}`);
   const total = parseInt(resp.headers.get("content-length") || "0", 10);
   const reader = resp.body.getReader();
@@ -280,12 +224,11 @@ async function fetchEnc(url, onProgress) {
     loaded += value.length;
     if (onProgress) onProgress(loaded, total);
   }
-  const blob = new Blob(chunks);
-  const decrypted = await decryptBuffer(await blob.arrayBuffer());
+  const buffer = await new Blob(chunks).arrayBuffer();
 
   // Cache the result
-  FILE_CACHE.set(url, decrypted);
-  return decrypted;
+  FILE_CACHE.set(url, buffer);
+  return buffer;
 }
 
 function progressCb(loaded, total) {
@@ -299,11 +242,11 @@ function progressCb(loaded, total) {
 // ── Layer loading (optimized) ─────────────────────────────────────────────────
 async function loadLayer(layer, onProgress) {
   if (layer.type === "obj") {
-    // 1. Fetch + decrypt OBJ in parallel with texture
-    const objPromise = fetchEnc(layer.obj, (loaded, total) => {
+    // 1. Fetch OBJ in parallel with texture
+    const objPromise = fetchFile(layer.obj, (loaded, total) => {
       if (onProgress) onProgress(loaded, total * 0.7); // Weight OBJ as 70% of progress
     });
-    const texPromise = fetchEnc(layer.tex).catch(() => null);
+    const texPromise = fetchFile(layer.tex).catch(() => null);
 
     const objBuf = await objPromise;
     const objUrl = URL.createObjectURL(new Blob([objBuf], { type: "text/plain" }));
@@ -341,7 +284,7 @@ async function loadLayer(layer, onProgress) {
   }
 
   if (layer.type === "ply") {
-    const plyBuf  = await fetchEnc(layer.file, onProgress);
+    const plyBuf  = await fetchFile(layer.file, onProgress);
     const plyBlob = new Blob([plyBuf]);
     const plyUrl  = URL.createObjectURL(plyBlob);
 
@@ -413,13 +356,6 @@ function showError(msg) {
 let activeModel = null;
 
 async function openModel(index) {
-  try {
-    await ensureKeyReady();
-  } catch (err) {
-    showError("Encryption key not initialized: " + err.message);
-    return;
-  }
-
   activeModel = MODELS[index];
   modelTitleEl.textContent = activeModel.name;
   activeModel.layers.forEach(l => { l._object = null; l._loaded = false; l._loading = false; });
