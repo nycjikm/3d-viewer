@@ -140,71 +140,18 @@ async function decryptBuffer(encBuffer) {
   return crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, ciphertext);
 }
 
-// ── Password gate ─────────────────────────────────────────────────────────────
-const passwordScreen = document.getElementById("password-screen");
-const passwordInput  = document.getElementById("password-input");
-const passwordBtn    = document.getElementById("password-btn");
-const passwordError  = document.getElementById("password-error");
+// ── Auto-unlock (no password gate) ────────────────────────────────────────────
+galleryEl.hidden = false;
 
-galleryEl.hidden = true;
-
-async function tryPassword() {
-  const pw = passwordInput.value;
-  if (!pw) return;
-  passwordBtn.textContent = "Checking…";
-  passwordBtn.disabled = true;
-  try {
-    const key = await deriveKey(pw);
-    // Verify by decrypting the tiny sentinel file
-    const resp = await fetch("models/verify.enc");
-    const buf  = await resp.arrayBuffer();
-    const data = new Uint8Array(buf);
-    const plainBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: data.slice(0, 12) }, key, data.slice(12)
-    );
-    const plain = new TextDecoder().decode(plainBuf);
-    if (plain !== "VALID") throw new Error("bad sentinel");
-
-    cryptoKey = key;
-    // Store key bytes (not the password) for session restore
-    const exported = await crypto.subtle.exportKey("raw", key);
-    const hex = Array.from(new Uint8Array(exported))
-      .map(b => b.toString(16).padStart(2, "0")).join("");
-    sessionStorage.setItem("keyHex", hex);
-    passwordScreen.hidden = true;
-    galleryEl.hidden = false;
-  } catch {
-    passwordError.hidden = false;
-    passwordInput.value = "";
-    passwordInput.focus();
-  } finally {
-    passwordBtn.textContent = "Enter";
-    passwordBtn.disabled = false;
-  }
-}
-
-// Restore session — key bytes only, password never stored
+// Derive encryption key from hardcoded password
 (async () => {
-  const hex = sessionStorage.getItem("keyHex");
-  if (!hex) return;
   try {
-    const bytes = new Uint8Array(hex.match(/.{2}/g).map(b => parseInt(b, 16)));
-    cryptoKey = await crypto.subtle.importKey(
-      "raw", bytes, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
-    );
-    const resp = await fetch("models/verify.enc");
-    const buf  = await resp.arrayBuffer();
-    const data = new Uint8Array(buf);
-    await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.slice(0, 12) }, cryptoKey, data.slice(12));
-    passwordScreen.hidden = true;
-    galleryEl.hidden = false;
-  } catch {
-    sessionStorage.removeItem("keyHex");
+    const key = await deriveKey("robot452");
+    cryptoKey = key;
+  } catch (err) {
+    console.error("Failed to initialize encryption:", err);
   }
 })();
-
-passwordBtn.addEventListener("click", tryPassword);
-passwordInput.addEventListener("keydown", e => { if (e.key === "Enter") tryPassword(); });
 
 // ── Gallery cards ─────────────────────────────────────────────────────────────
 MODELS.forEach((m, i) => {
