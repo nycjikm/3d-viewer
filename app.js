@@ -11,10 +11,18 @@ const MODELS = [
     icon: "🌳",
     layers: [
       {
+        name: "Textured Mesh",
+        type: "obj",
+        obj: "models/double_tree/scene_textured_filtered_mild.obj",
+        mtl: "models/double_tree/scene_textured_filtered_mild.mtl",
+        tex: "models/double_tree/scene_textured_filtered_mild_0.png",
+        size: "74 MB", color: "#f59e0b", visible: true,
+      },
+      {
         name: "Mesh Structure",
         type: "ply",
         file: "models/double_tree/scene_mesh.ply",
-        size: "4.6 MB", color: "#8b5cf6", visible: true, isMesh: true,
+        size: "4.6 MB", color: "#8b5cf6", visible: false, isMesh: true,
       },
       {
         name: "Mesh Filtered",
