@@ -134,24 +134,43 @@ async function deriveKey(password) {
 }
 
 async function decryptBuffer(encBuffer) {
-  const data = new Uint8Array(encBuffer);
-  const iv         = data.slice(0, 12);
-  const ciphertext = data.slice(12);
-  return crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, ciphertext);
+  try {
+    if (!cryptoKey) throw new Error("Crypto key not initialized");
+    const data = new Uint8Array(encBuffer);
+    const iv         = data.slice(0, 12);
+    const ciphertext = data.slice(12);
+    return await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, ciphertext);
+  } catch (err) {
+    console.error("Decryption error:", err);
+    throw new Error(`Failed to decrypt file: ${err.message}`);
+  }
 }
 
 // ── Auto-unlock (no password gate) ────────────────────────────────────────────
-galleryEl.hidden = false;
+let keyReady = false;
 
 // Derive encryption key from hardcoded password
 (async () => {
   try {
     const key = await deriveKey("robot452");
     cryptoKey = key;
+    keyReady = true;
+    galleryEl.hidden = false;
   } catch (err) {
     console.error("Failed to initialize encryption:", err);
+    galleryEl.hidden = false;
   }
 })();
+
+// Ensure key is ready before loading
+async function ensureKeyReady() {
+  let attempts = 0;
+  while (!keyReady && attempts < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    attempts++;
+  }
+  if (!keyReady) throw new Error("Encryption key failed to initialize");
+}
 
 // ── Gallery cards ─────────────────────────────────────────────────────────────
 MODELS.forEach((m, i) => {
@@ -394,6 +413,13 @@ function showError(msg) {
 let activeModel = null;
 
 async function openModel(index) {
+  try {
+    await ensureKeyReady();
+  } catch (err) {
+    showError("Encryption key not initialized: " + err.message);
+    return;
+  }
+
   activeModel = MODELS[index];
   modelTitleEl.textContent = activeModel.name;
   activeModel.layers.forEach(l => { l._object = null; l._loaded = false; l._loading = false; });
