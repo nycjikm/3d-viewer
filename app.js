@@ -59,18 +59,10 @@ const MODELS = [
     icon: "🪸",
     layers: [
       {
-        name: "Textured Mesh",
-        type: "obj",
-        obj: "models/transcect 1 Abo Shosha/scene_textured.obj",
-        mtl: "models/transcect 1 Abo Shosha/scene_textured.mtl",
-        tex: "models/transcect 1 Abo Shosha/scene_textured_material_00_map_Kd.jpg",
-        size: "8.5 MB", color: "#f59e0b", visible: true,
-      },
-      {
         name: "Mesh Structure",
         type: "ply",
         file: "models/transcect 1 Abo Shosha/scene_mesh.ply",
-        size: "32 MB", color: "#fbbf24", visible: false, isMesh: true,
+        size: "32 MB", color: "#f59e0b", visible: true, isMesh: true,
       },
     ],
   },
@@ -80,18 +72,10 @@ const MODELS = [
     icon: "🪸",
     layers: [
       {
-        name: "Textured Mesh",
-        type: "obj",
-        obj: "models/transcect 2 Abo Shosha/ZED_OUTPUT.obj",
-        mtl: "models/transcect 2 Abo Shosha/scene_textured.mtl",
-        tex: "models/transcect 2 Abo Shosha/scene_textured_material_00_map_Kd.jpg",
-        size: "11 MB", color: "#ec4899", visible: true,
-      },
-      {
         name: "Mesh Structure",
         type: "ply",
         file: "models/transcect 2 Abo Shosha/scene_mesh.ply",
-        size: "28 MB", color: "#f472b6", visible: false, isMesh: true,
+        size: "28 MB", color: "#ec4899", visible: true, isMesh: true,
       },
     ],
   },
