@@ -64,12 +64,6 @@ const MODELS = [
         file: "models/transcect 1 Abo Shosha/scene_mesh.ply",
         size: "32 MB", color: "#f59e0b", visible: true, isMesh: true,
       },
-      {
-        name: "Point Cloud",
-        type: "ply",
-        file: "models/transcect 1 Abo Shosha/scene_dense.ply",
-        size: "120 MB", color: "#06b6d4", visible: false,
-      },
     ],
   },
   {
