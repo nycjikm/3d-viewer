@@ -64,6 +64,12 @@ const MODELS = [
         file: "models/transcect 1 Abo Shosha/scene_mesh.ply",
         size: "32 MB", color: "#f59e0b", visible: true, isMesh: true,
       },
+      {
+        name: "Point Cloud",
+        type: "ply",
+        file: "models/transcect 1 Abo Shosha/scene_dense.mvs",
+        size: "3.1 MB", color: "#06b6d4", visible: false,
+      },
     ],
   },
   {
@@ -76,6 +82,12 @@ const MODELS = [
         type: "ply",
         file: "models/transcect 2 Abo Shosha/scene_mesh.ply",
         size: "28 MB", color: "#ec4899", visible: true, isMesh: true,
+      },
+      {
+        name: "Point Cloud",
+        type: "ply",
+        file: "models/transcect 2 Abo Shosha/scene.ply",
+        size: "52 MB", color: "#06b6d4", visible: false,
       },
     ],
   },
