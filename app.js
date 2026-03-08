@@ -19,12 +19,6 @@ const MODELS = [
         size: "74 MB", color: "#f59e0b", visible: true,
       },
       {
-        name: "Mesh Structure",
-        type: "ply",
-        file: "models/double_tree/scene_mesh.ply",
-        size: "4.6 MB", color: "#8b5cf6", visible: false, isMesh: true,
-      },
-      {
         name: "Mesh Filtered",
         type: "ply",
         file: "models/double_tree/scene_mesh_filtered_openmvs.ply",
@@ -52,12 +46,6 @@ const MODELS = [
         size: "11 MB", color: "#10b981", visible: true,
       },
       {
-        name: "Mesh Structure",
-        type: "ply",
-        file: "models/single_tree/scene_mesh.ply",
-        size: "1.8 MB", color: "#059669", visible: false, isMesh: true,
-      },
-      {
         name: "Dense Cloud",
         type: "ply",
         file: "models/single_tree/scene_dense.ply",
@@ -71,16 +59,18 @@ const MODELS = [
     icon: "🪸",
     layers: [
       {
+        name: "Textured Mesh",
+        type: "obj",
+        obj: "models/transcect 1 Abo Shosha/scene_textured.obj",
+        mtl: "models/transcect 1 Abo Shosha/scene_textured.mtl",
+        tex: "models/transcect 1 Abo Shosha/scene_textured_material_00_map_Kd.jpg",
+        size: "8.5 MB", color: "#f59e0b", visible: true,
+      },
+      {
         name: "Mesh Structure",
         type: "ply",
         file: "models/transcect 1 Abo Shosha/scene_mesh.ply",
-        size: "32 MB", color: "#f59e0b", visible: true, isMesh: true,
-      },
-      {
-        name: "Point Cloud",
-        type: "ply",
-        file: "models/transcect 1 Abo Shosha/scene_dense.mvs",
-        size: "3.1 MB", color: "#06b6d4", visible: false,
+        size: "32 MB", color: "#fbbf24", visible: false, isMesh: true,
       },
     ],
   },
@@ -90,28 +80,18 @@ const MODELS = [
     icon: "🪸",
     layers: [
       {
+        name: "Textured Mesh",
+        type: "obj",
+        obj: "models/transcect 2 Abo Shosha/ZED_OUTPUT.obj",
+        mtl: "models/transcect 2 Abo Shosha/scene_textured.mtl",
+        tex: "models/transcect 2 Abo Shosha/scene_textured_material_00_map_Kd.jpg",
+        size: "11 MB", color: "#ec4899", visible: true,
+      },
+      {
         name: "Mesh Structure",
         type: "ply",
         file: "models/transcect 2 Abo Shosha/scene_mesh.ply",
-        size: "28 MB", color: "#ec4899", visible: true, isMesh: true,
-      },
-      {
-        name: "Point Cloud",
-        type: "ply",
-        file: "models/transcect 2 Abo Shosha/scene.ply",
-        size: "52 MB", color: "#14b8a6", visible: false,
-      },
-      {
-        name: "Scene Surface",
-        type: "ply",
-        file: "models/transcect 2 Abo Shosha/scene.mvs",
-        size: "3.7 MB", color: "#d946ef", visible: false, isMesh: true,
-      },
-      {
-        name: "Dense Surface",
-        type: "ply",
-        file: "models/transcect 2 Abo Shosha/scene_dense.mvs",
-        size: "3.7 MB", color: "#a855f7", visible: false, isMesh: true,
+        size: "28 MB", color: "#f472b6", visible: false, isMesh: true,
       },
     ],
   },
